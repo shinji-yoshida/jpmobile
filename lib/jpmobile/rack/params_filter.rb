@@ -13,7 +13,8 @@ module Jpmobile
           # パラメータをkey, valueに分解
           # form_params
           if env['REQUEST_METHOD'] == 'POST' || env['REQUEST_METHOD'] == 'PUT'
-            env['rack.input'] = StringIO.new(parse_query(env['rack.input'].read))
+            env['rack.input.original'] = env['rack.input'].read
+            env['rack.input'] = StringIO.new(parse_query(env['rack.input.original']))
           end
 
           # query_params
