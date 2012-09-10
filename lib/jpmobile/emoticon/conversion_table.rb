@@ -2552,6 +2552,7 @@ Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU = {
   0xF537=>0xE54E,
 }
 Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK = {
+  0xE001=>0xE003, # for test
   0xE63E=>0xF04A,
   0xE63F=>0xF049,
   0xE640=>0xF04B,
