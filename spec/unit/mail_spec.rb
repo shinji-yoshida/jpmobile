@@ -255,6 +255,31 @@ describe "Jpmobile::Mail" do
     end
   end
 
+  describe "long subject with half-characters" do
+    before(:each) do
+      @mail         = Mail.new
+      @mail.subject = "西暦2012年09月03日は今日になるわけだが10時16分現在のこの時間ではどうかな"
+      @mail.body    = "株式会社・・"
+      @mail.from    = "info@jpmobile-rails.org"
+    end
+
+    describe "AbstractMobile" do
+      before(:each) do
+        @mobile = Jpmobile::Mobile::AbstractMobile.new(nil, nil)
+        @mail.mobile = @mobile
+        @mail.to = "むすめふさほせ <info+to@jpmobile-rails.org>"
+      end
+
+      context "to_s" do
+        it "should contain encoded subject" do
+          ascii_8bit(@mail.to_s).should match(Regexp.compile(Regexp.escape("=?ISO-2022-JP?B?GyRCQD5OcRsoQjIwMTIbJEJHLxsoQjA5GyRCN24bKEIwMxskQkZ8JE86IxsoQg==?=")))
+          ascii_8bit(@mail.to_s).should match(Regexp.compile(Regexp.escape("=?ISO-2022-JP?B?GyRCRnwkSyRKJGskbyQxJEAkLBsoQjEwGyRCO34bKEIxNhskQkosOD0bKEI=?=")))
+          ascii_8bit(@mail.to_s).should match(Regexp.compile(Regexp.escape("=?ISO-2022-JP?B?GyRCOl8kTiQzJE47fjRWJEckTyRJJCYkKyRKGyhC?=")))
+        end
+      end
+    end
+  end
+
   context "with attachments" do
     before(:each) do
       @mobile = Jpmobile::Mobile::AbstractMobile.new(nil, nil)
@@ -315,6 +340,42 @@ describe "Jpmobile::Mail" do
       }.should_not raise_error
 
       Mail::TestMailer.deliveries.size
+    end
+  end
+
+  context 'sending with carrier from' do
+    before do
+      @mail         = Mail.new
+      @mail.subject = "万葉"
+      @mail.to      = "ちはやふる <info@jpmobile-rails.org>"
+    end
+
+    it 'should convert content-transfer-encoding' do
+      mobile = Jpmobile::Mobile::Au.new(nil, nil)
+      @mail.content_transfer_encoding = 'base64'
+      @mail.body = ['ほげ'].pack('m')
+      @mail.charset = 'UTF-8'
+
+      @mail.mobile = mobile
+      @mail.from = '<えーゆー> au@ezweb.ne.jp'
+
+      @mail.encoded.should match(/content-transfer-encoding: 7bit/i)
+    end
+
+    it 'should not convert content-transfer-encoding with BINARY' do
+      mobile = Jpmobile::Mobile::Au.new(nil, nil)
+      data = ['ほげ'].pack('m').strip
+
+      @mail.content_transfer_encoding = 'base64'
+      @mail.content_type = 'image/jpeg'
+      @mail.body = data
+      @mail.charset = 'UTF-8'
+
+      @mail.mobile = mobile
+      @mail.from = '<えーゆー> au@ezweb.ne.jp'
+
+      @mail.encoded.should match(/content-transfer-encoding: base64/i)
+      @mail.encoded.should match(data)
     end
   end
 end

@@ -27,6 +27,7 @@ module Jpmobile
     autoload :Iphone,         'jpmobile/mobile/iphone'
     autoload :Android,        'jpmobile/mobile/android'
     autoload :WindowsPhone,   'jpmobile/mobile/windows_phone'
+    autoload :BlackBerry,     'jpmobile/mobile/black_berry'
 
     autoload :Tablet,         'jpmobile/mobile/tablet'
     autoload :AndroidTablet,  'jpmobile/mobile/android_tablet'
@@ -34,7 +35,10 @@ module Jpmobile
 
     autoload :Display,        'jpmobile/mobile/display'
 
-    DEFAULT_CARRIERS = %w(Docomo Au Softbank Vodafone Emobile Willcom Ddipocket Ipad AndroidTablet Iphone Android WindowsPhone)
+    autoload :UnicodeEmoticon, 'jpmobile/mobile/unicode_emoticon'
+    autoload :GoogleEmoticon, 'jpmobile/mobile/google_emoticon'
+
+    DEFAULT_CARRIERS = %w(Docomo Au Softbank Vodafone Emobile Willcom Ddipocket Ipad AndroidTablet Iphone Android WindowsPhone BlackBerry)
 
     def self.carriers
       @carriers ||= DEFAULT_CARRIERS.dup
@@ -57,6 +61,11 @@ module Jpmobile
 
   autoload :Mailer,   'jpmobile/mailer'
   autoload :Resolver, 'jpmobile/resolver'
+
+  module_function
+  def config
+    ::Jpmobile::Configuration.instance
+  end
 end
 
 if defined?(Rails)

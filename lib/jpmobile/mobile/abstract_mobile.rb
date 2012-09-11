@@ -80,7 +80,7 @@ module Jpmobile::Mobile
     def variants
       return @_variants if @_variants
 
-      @_variants = self.class.ancestors.select {|c| c.to_s =~ /^Jpmobile/}.map do |klass|
+      @_variants = self.class.ancestors.select {|c| c.to_s =~ /^Jpmobile/ && c.to_s !~ /Emoticon/}.map do |klass|
         klass = klass.to_s.
           gsub(/Jpmobile::/, '').
           gsub(/AbstractMobile::/, '').
@@ -105,7 +105,7 @@ module Jpmobile::Mobile
     # メール送信用
     def to_mail_subject(str)
       Jpmobile::Util.fold_text(Jpmobile::Emoticon.unicodecr_to_utf8(str)).
-        map{|text| "=?#{mail_charset}?B?" + [to_mail_encoding(text)].pack('m').strip + "?=" }.
+        map{|text| "=?#{mail_charset}?B?" + [to_mail_encoding(text)].pack('m').gsub(/\n/, '') + "?=" }.
         join("\n\s")
     end
     def to_mail_body(str)
@@ -113,7 +113,8 @@ module Jpmobile::Mobile
     end
     def mail_charset(charset = nil)
       # (charset.nil? or charset == "") ? self.class::MAIL_CHARSET : charset
-      self.class::MAIL_CHARSET
+      # self.class::MAIL_CHARSET
+      charset.nil? || charset == '' || charset =~ /US-ASCII/i ? self.class::MAIL_CHARSET : charset
     end
     def content_transfer_encoding(headers)
       transfer_encoding = headers['Content-Transfer-Encoding']

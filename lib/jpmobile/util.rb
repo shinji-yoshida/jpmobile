@@ -194,7 +194,7 @@ module Jpmobile
     end
 
     def jis_string_regexp
-      Regexp.compile(Regexp.escape(ascii_8bit("\x1b\x24\x42")) + "(.+)" + Regexp.escape(ascii_8bit("\x1b\x28\x42")))
+      Regexp.compile(Regexp.escape(ascii_8bit("\x1b\x24\x42")) + "(.+?)" + Regexp.escape(ascii_8bit("\x1b\x28\x42")))
     end
 
     def encode(str, charset)
@@ -385,6 +385,35 @@ module Jpmobile
         [text, remain]
       end
 
+    end
+
+    def invert_table(hash)
+      result = {}
+      hash.keys.each do |key|
+        if result[hash[key]]
+          if !key.kind_of?(Array) and !result[hash[key]].kind_of?(Array) and result[hash[key]] > key
+            result[hash[key]] = key
+          end
+        else
+          result[hash[key]] = key
+        end
+      end
+      result
+    end
+
+    def decode(str, encoding, charset)
+      _str = case encoding
+             when /quoted-printable/i
+               str.unpack('M').first.strip
+             when /base64/i
+               str.unpack('m').first.strip
+             else
+               str
+             end
+
+      _extract_charset = Jpmobile::Util.extract_charset(_str)
+      charset = _extract_charset unless _extract_charset.blank? or _extract_charset == charset
+      Jpmobile::Util.set_encoding(_str, charset)
     end
   end
 end

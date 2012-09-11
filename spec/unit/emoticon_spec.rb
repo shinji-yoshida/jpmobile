@@ -30,6 +30,38 @@ describe Jpmobile::Emoticon do
         Jpmobile::Emoticon::unicodecr_to_external("&#xE48E;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK, true).should == [0xe04a, 0xe049].pack('U*')
       end
     end
+
+    it 'should convert docomo unicodecr to Unicode 6.0 emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xe63e;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_UNICODE_EMOTICON, false).should == [0x2600].pack('U')
+    end
+
+    it 'should convert au unicodecr to Unicode 6.0 emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xe48e;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_UNICODE_EMOTICON, false).should == [0x26C5].pack('U')
+    end
+
+    it 'should convert Softbank unicodecr to Unicode 6.0 emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xf001;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_UNICODE_EMOTICON, false).should == [0x1F466].pack('U')
+    end
+
+    it 'should not convert 〓' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#x3013;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_UNICODE_EMOTICON, false).should == '〓'
+    end
+
+    it 'should convert docomo unicodecr to Google emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xe63e;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_GOOGLE_EMOTICON, false).should == [0xFE000].pack('U')
+    end
+
+    it 'should convert au unicodecr to Google emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xe48e;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_GOOGLE_EMOTICON, false).should == [0xFE00F].pack('U')
+    end
+
+    it 'should convert Softbank unicodecr to Google emoticon' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#xf001;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_GOOGLE_EMOTICON, false).should == [0xFE19B].pack('U')
+    end
+
+    it 'should not convert 〓' do
+      Jpmobile::Emoticon.unicodecr_to_external("&#x3013;", Jpmobile::Emoticon::CONVERSION_TABLE_TO_GOOGLE_EMOTICON, false).should == '〓'
+    end
   end
 
   describe "unicodecr_to_utf8" do
@@ -69,6 +101,34 @@ describe Jpmobile::Emoticon do
 
     it "should not convert docomo encoding of koukai-sjis emoticons to unicodecr" do
       Jpmobile::Emoticon::external_to_unicodecr_docomo(sjis("\x8c\xf6\x8a\x4a")).should == sjis("\x8c\xf6\x8a\x4a")
+    end
+
+    context 'at iPhone emoticon' do
+      it 'should convert iPhone Unicode emoticon to SoftBank emoticon' do
+        Jpmobile::Emoticon::external_to_unicodecr_unicode60("\342\230\200").should == "&#xf04a;"
+      end
+
+      it 'should convert iPhone Unicode emoticon to multi SoftBank emoticons' do
+        Jpmobile::Emoticon::external_to_unicodecr_unicode60("\342\233\205").should == "&#xF04A;,&#xF049;"
+      end
+
+      it 'should not convert 〓' do
+        Jpmobile::Emoticon::external_to_unicodecr_unicode60('〓').should == "〓"
+      end
+    end
+
+    context 'at Android emoticon' do
+      it 'should convert Android Google Unicode emoticon to Docomo emoticon' do
+        Jpmobile::Emoticon::external_to_unicodecr_google("\363\276\200\200").should == "&#xe63e;"
+      end
+
+      it 'should convert Android Google Unicode emoticon to multi Docomo emoticon' do
+        Jpmobile::Emoticon::external_to_unicodecr_google("\363\276\200\217").should == "&#xE63E;&#xE63F;"
+      end
+
+      it 'should not convert 〓' do
+        Jpmobile::Emoticon::external_to_unicodecr_google('〓').should == "〓"
+      end
     end
   end
 

@@ -26,8 +26,18 @@ module Jpmobile
       SJIS_REGEXP SOFTBANK_WEBCODE_REGEXP DOCOMO_SJIS_REGEXP AU_SJIS_REGEXP SOFTBANK_UNICODE_REGEXP
       EMOTICON_UNICODES UTF8_REGEXP
       CONVERSION_TABLE_TO_PC_EMAIL SOFTBANK_SJIS_REGEXP AU_EMAILJIS_REGEXP
+      UNICODE_EMOTICONS UNICODE_EMOTICON_REGEXP UNICODE_EMOTICON_TO_CARRIER_EMOTICON
+      GOOGLE_EMOTICONS GOOGLE_EMOTICON_REGEXP GOOGLE_EMOTICON_TO_CARRIER_EMOTICON
+      CONVERSION_TABLE_TO_UNICODE_EMOTICON CONVERSION_TABLE_TO_GOOGLE_EMOTICON
+      GETA_CODE GETA
     ).each do |const|
       autoload const, 'jpmobile/emoticon/z_combine'
+    end
+    %w( GOOGLE_TO_DOCOMO_UNICODE GOOGLE_TO_AU_UNICODE GOOGLE_TO_SOFTBANK_UNICODE ).each do |const|
+      autoload const, 'jpmobile/emoticon/google'
+    end
+    %w( UNICODE_TO_DOCOMO_UNICODE UNICODE_TO_AU_UNICODE UNICODE_TO_SOFTBANK_UNICODE ).each do |const|
+      autoload const, 'jpmobile/emoticon/unicode'
     end
 
     # +str+ のなかでDoCoMo絵文字をUnicode数値文字参照に置換した文字列を返す。
@@ -80,6 +90,52 @@ module Jpmobile
       external_to_unicodecr_softbank(str)
     end
 
+    # Unicode 6.0絵文字の変換
+    def self.external_to_unicodecr_unicode60(str)
+      str.gsub(UNICODE_EMOTICON_REGEXP) do |match|
+        unicodes = match.unpack('U*')
+        unicodes = unicodes.first if unicodes.size == 1
+
+        if (emoticon = UNICODE_EMOTICON_TO_CARRIER_EMOTICON[unicodes]) == GETA_CODE
+          GETA
+        elsif emoticon
+          case emoticon
+          when GETA_CODE
+            GETA
+          when Integer
+            "&#x%04x;" % emoticon
+          when String
+            emoticon
+          end
+        else
+          # 変換できなければ〓に
+          GETA
+        end
+      end
+    end
+
+    # Google絵文字の変換
+    def self.external_to_unicodecr_google(str)
+      str.gsub(GOOGLE_EMOTICON_REGEXP) do |match|
+        unicodes = match.unpack('U*')
+        unicodes = unicodes.first if unicodes.size == 1
+
+        if emoticon = GOOGLE_EMOTICON_TO_CARRIER_EMOTICON[unicodes]
+          case emoticon
+          when GETA_CODE
+            GETA
+          when Integer
+            "&#x%04x;" % emoticon
+          when String
+            emoticon
+          end
+        else
+          # 変換できなければ〓に
+          GETA
+        end
+      end
+    end
+
     # +str+ のなかでUnicode数値文字参照で表記された絵文字を携帯側エンコーディングに置換する。
     #
     # キャリア間の変換に +conversion_table+ を使う。+conversion_table+ に+nil+を与えると、
@@ -90,6 +146,7 @@ module Jpmobile
     def self.unicodecr_to_external(str, conversion_table=nil, to_sjis=true)
       str.gsub(/&#x([0-9a-f]{4});/i) do |match|
         unicode = $1.scanf("%x").first
+
         if conversion_table
           converted = conversion_table[unicode] # キャリア間変換
         else
@@ -108,9 +165,15 @@ module Jpmobile
             end
           elsif webcode = SOFTBANK_UNICODE_TO_WEBCODE[converted-0x1000]
             [converted-0x1000].pack('U')
-          elsif converted == GETA
+          elsif converted == GETA_CODE
             # PCで〓を表示する場合
-            [GETA].pack("U")
+            GETA
+          elsif UNICODE_EMOTICONS.include?(converted) or GOOGLE_EMOTICONS.include?(converted)
+            if unicode == GETA_CODE
+              GETA
+            else
+              [converted].pack('U*')
+            end
           else
             # キャリア変換テーブルに指定されていたUnicodeに対応する
             # 携帯側エンコーディングが見つからない(変換テーブルの不備の可能性あり)。
